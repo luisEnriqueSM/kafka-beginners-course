@@ -10,13 +10,13 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProducerDemoWithCallBacks {
+public class ProducerDemoKeys {
 
-    private static final Logger log = LoggerFactory.getLogger(ProducerDemoWithCallBacks.class.getSimpleName());
+    private static final Logger log = LoggerFactory.getLogger(ProducerDemoKeys.class.getSimpleName());
 
     public static void main(String[] args) {
         log.info("Kafka producer");
-        
+
         Properties properties = new Properties();
 
         // connect to localhost
@@ -25,17 +25,19 @@ public class ProducerDemoWithCallBacks {
         // create Producer Properties
         properties.setProperty("key.serializer", StringSerializer.class.getName());
         properties.setProperty("value.serializer", StringSerializer.class.getName());
-        properties.setProperty("batch.size", "400");
-        //properties.setProperty("partitioner.class", RoundRobinPartitioner.class.getName());
 
         // create the Producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        for(int j=0; j<10; j++){
-            for(int i=0; i<30; i++){
+        for(int j=0; j<2; j++){
+            for (int i = 0; i < 10; i++) {
+
+                String topic = "demo_java";
+                String key = "id: " + i;
+                String value = "hello world " + i;
+
                 // create a producer record
-                ProducerRecord<String, String> producerRecord = 
-                        new ProducerRecord<>("demo_java", "hello world" + i);
+                ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topic, key, value);
 
                 // send data
                 producer.send(producerRecord, new Callback() {
@@ -43,29 +45,22 @@ public class ProducerDemoWithCallBacks {
                     @Override
                     public void onCompletion(RecordMetadata metadata, Exception e) {
                         // executed every time a record succesfully sent or an exception is thrown
-                        if(e == null){
+                        if (e == null) {
                             // the record was succesfully sent
-                            log.info("Received new metadata \n" + 
-                                    "Topic: " + metadata.topic() + "\n" +
-                                    "Partition: " + metadata.partition() + "\n" +
-                                    "Offset: " + metadata.offset() + "\n" + 
-                                    "Timestamp: " + metadata.timestamp());
+                            log.info("Key: " + key + "| Partition: " + metadata.partition());
                         } else {
                             log.error("Error while producing", e);
                         }
                     }
-                    
-                });   
+                });
             }
-
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
-
-        
 
         // tell the producer to send all data and block until done - synchronous
         producer.flush();
