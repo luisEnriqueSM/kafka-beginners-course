@@ -34,7 +34,13 @@ public class ProducerDemo {
                 new ProducerRecord<>("demo_java", "hello world");
 
         // send data
-        producer.send(producerRecord);
+        producer.send(producerRecord, (metadata, exception) -> {
+            if (exception == null) {
+                log.info("Mensaje enviado correctamente: topic={}, partition={}, offset={}", metadata.topic(), metadata.partition(), metadata.offset());
+            } else {
+                log.error("Error al enviar mensaje", exception);
+            }
+        });
 
         // tell the producer to send all data and block until done - synchronous
         producer.flush();
