@@ -1,1 +1,1 @@
-# kafka-beginners-course
+# kafka-producer-course
